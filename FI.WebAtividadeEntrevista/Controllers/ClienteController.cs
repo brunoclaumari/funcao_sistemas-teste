@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web.Mvc;
 using FI.AtividadeEntrevista.DML;
+using FI.WebAtividadeEntrevista.Helpers;
 
 namespace WebAtividadeEntrevista.Controllers
 {
@@ -25,6 +26,7 @@ namespace WebAtividadeEntrevista.Controllers
         public JsonResult Incluir(ClienteModel model)
         {
             List<string> erros = new List<string>();
+            UtilHelper helper = new UtilHelper();
             BoCliente bo = new BoCliente();
             bool cpfComPendencias = bo.CpfComProblemas(model.Cpf, model.Id, ref erros);
 
@@ -39,7 +41,7 @@ namespace WebAtividadeEntrevista.Controllers
             }
             else
             {
-
+                List<Beneficiario> bene = helper.PreencheBeneficiario(model);
                 model.Id = bo.Incluir(new Cliente()
                 {
                     CEP = model.CEP,
@@ -52,16 +54,24 @@ namespace WebAtividadeEntrevista.Controllers
                     Sobrenome = model.Sobrenome,
                     Telefone = model.Telefone,
                     Cpf = model.Cpf,
+                    Beneficiarios = bene,
                 });
 
-
-                return Json("Cadastro efetuado com sucesso");
+                if(model.Id > 0)
+                    return Json("Cadastro efetuado com sucesso");
+                else
+                {
+                    Response.StatusCode = 400;
+                    return Json("Não foi possível salvar o cliente. Verifique os dados!");
+                }
             }
         }
 
         [HttpPost]
         public JsonResult Alterar(ClienteModel model)
         {
+            bool sucesso;
+            UtilHelper helper = new UtilHelper();
             List<string> erros = new List<string>();
             BoCliente bo = new BoCliente();
             //bool cpfBeneficiarioComPendencias = false;
@@ -83,19 +93,9 @@ namespace WebAtividadeEntrevista.Controllers
             }
             else
             {
-                List<Beneficiario> bene = new List<Beneficiario>();
-                model.Beneficiarios.ForEach(b =>
-                {
-                    bene.Add(new Beneficiario
-                    {
-                        Id = b.Id,
-                        Cpf = b.Cpf,
-                        Nome = b.Nome,
-                        IdCliente = model.Id,
-                    });
-                });
+                List<Beneficiario> bene = helper.PreencheBeneficiario(model);
 
-                bo.Alterar(new Cliente()
+                sucesso = bo.Alterar(new Cliente()
                 {
                     Id = model.Id,
                     CEP = model.CEP,
@@ -111,7 +111,13 @@ namespace WebAtividadeEntrevista.Controllers
                     Beneficiarios = bene
                 });
 
-                return Json("Cadastro alterado com sucesso");
+                if(sucesso)
+                    return Json("Cadastro alterado com sucesso");
+                else
+                {
+                    Response.StatusCode = 400;
+                    return Json(string.Join(Environment.NewLine, "Não foi possível alterar o cliente. Verifique os dados!"));
+                }
             }
         }
 
@@ -119,6 +125,7 @@ namespace WebAtividadeEntrevista.Controllers
         public ActionResult Alterar(long id)
         {
             BoCliente bo = new BoCliente();
+            UtilHelper helper = new UtilHelper();
             Cliente cliente = bo.Consultar(id);
             Models.ClienteModel model = null;
 
@@ -136,7 +143,8 @@ namespace WebAtividadeEntrevista.Controllers
                     Nome = cliente.Nome,
                     Sobrenome = cliente.Sobrenome,
                     Telefone = cliente.Telefone,
-                    Cpf = cliente.Cpf
+                    Cpf = cliente.Cpf,
+                    Beneficiarios = helper.ConverteBeneficiarioParaBeneficiarioModel(cliente),
                 };
 
 
@@ -171,5 +179,6 @@ namespace WebAtividadeEntrevista.Controllers
                 return Json(new { Result = "ERROR", Message = ex.Message });
             }
         }
+        
     }
 }

@@ -37,7 +37,7 @@ namespace FI.AtividadeEntrevista.DAL
         }
 
         /// <summary>
-        /// Inclui um novo cliente
+        /// Consulta um cliente por id
         /// </summary>
         /// <param name="cliente">Objeto de cliente</param>
         internal DML.Cliente Consultar(long Id)
@@ -46,10 +46,17 @@ namespace FI.AtividadeEntrevista.DAL
 
             parametros.Add(new System.Data.SqlClient.SqlParameter("Id", Id));
 
+            DaoBeneficiario daoBeneficiario = new DaoBeneficiario();
+
             DataSet ds = base.Consultar("FI_SP_ConsCliente", parametros);
             List<DML.Cliente> cli = Converter(ds);
+            var cliente = cli.FirstOrDefault();
+            if (cliente != null)
+            {
+                cliente.Beneficiarios = daoBeneficiario.Listar(cliente.Id);
+            }
 
-            return cli.FirstOrDefault();
+            return cliente;
         }
 
         internal bool VerificarExistencia(string CPF, long id)

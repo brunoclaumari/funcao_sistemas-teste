@@ -7,6 +7,8 @@ $(document).ready(function () {
     $('#Cpf').mask('000.000.000-00');
     $('#CpfBeneficiario').mask('000.000.000-00');
 
+    $('#CEP').mask('00000-000');
+
 });
 
 //$('#Cpf').on('keyup', function () {
@@ -34,21 +36,33 @@ $('#modal_beneficiarios').on('hide.bs.modal', function () {
 });
 
 
-
 //IncluirBeneficiario
 $('#IncluirBeneficiario').on('click', function () {
-
-    let CpfBeneficiario = $('#CpfBeneficiario').val();
-    let NomeBeneficiario = $('#NomeBeneficiario').val();
+    
     let tabelaBody = document.getElementById('contentBeneficiarios');
 
     var linhas = tabelaBody.getElementsByTagName('tr');
 
     tabelaBody.innerHTML += AdicionaBeneficiarioTabela(linhas.length + 1);
 
-    $('#CpfBeneficiario').val("");
-    $('#NomeBeneficiario').val("");
+    document.getElementById('CpfBeneficiario').value = '';
+    document.getElementById('NomeBeneficiario').value = '';
+
 });
+
+function PreencheModalBeneficiarios(listaObjBeneficiarios) {
+
+    let tabelaBody = document.getElementById('contentBeneficiarios');
+    tabelaBody.innerHTML = "";
+
+    listaObjBeneficiarios.map((benef, index) => {
+        let id = benef.Id;
+        let cpf = benef.Cpf;
+        let nome = benef.Nome;
+        tabelaBody.innerHTML += AdicionaLinhaBeneficiarioTabela(index+1, cpf, nome, id);
+        //let idCliente = benef.IdCliente;
+    });
+}
 
 //contentBeneficiarios
 //Beneficiarios
@@ -73,11 +87,15 @@ function ObtemListaBeneficiariosDadosTela() {
 
 function AlterarBeneficiario(count_position) {
     let CpfBeneficiario = $('#CpfBeneficiario').val();
-    let NomeBeneficiario = $('#NomeBeneficiario').val();
-    //cpf_${count_position}
-    $(`#cpf_${count_position}`).val($('#CpfBeneficiario').val());
-    $(`#nome_${count_position}`).val($('#NomeBeneficiario').val());
+    let NomeBeneficiario = $('#NomeBeneficiario').val();        
 
+    let nodeCpf = document.getElementById(`cpf_${count_position}`);
+    nodeCpf.textContent = CpfBeneficiario;
+
+    document.getElementById(`nome_${count_position}`).textContent = NomeBeneficiario;  
+    
+    document.getElementById('CpfBeneficiario').value = '';
+    document.getElementById('NomeBeneficiario').value = '';
 }
 
 function RetirarBeneficiario(count_position) {
@@ -88,6 +106,12 @@ function RetirarBeneficiario(count_position) {
     if (node.parentNode) {
         node.parentNode.removeChild(node);
     }
+}
+
+function PreencheSelecionado(count_position) {
+
+    $('#CpfBeneficiario').val(document.getElementById(`cpf_${count_position}`).textContent);
+    $('#NomeBeneficiario').val(document.getElementById(`nome_${count_position}`).textContent); 
 
 }
 
@@ -98,10 +122,26 @@ function AdicionaBeneficiarioTabela(count) {
     let CpfBeneficiario = $('#CpfBeneficiario').val();
     let NomeBeneficiario = $('#NomeBeneficiario').val();
 
-    return `<tr id="linha_${count}" >
-                <td id="id_${count}" class="hidden">0</td>
-                <td id="cpf_${count}" >${CpfBeneficiario}</td>
-                <td id="nome_${count}" >${NomeBeneficiario}</td>
+    return AdicionaLinhaBeneficiarioTabela(count, CpfBeneficiario, NomeBeneficiario, 0);
+
+    //return `<tr id="linha_${count}" >
+    //            <td id="id_${count}" class="hidden">0</td>
+    //            <td id="cpf_${count}" >${CpfBeneficiario}</td>
+    //            <td id="nome_${count}" >${NomeBeneficiario}</td>
+    //            <td>
+    //                <button id="alterarBeneficiario_${count}" onclick="AlterarBeneficiario(${count})" type="button" class="btn btn-primary">Alterar</button>
+    //                <button id="excluirBeneficiario_${count}" onclick="RetirarBeneficiario(${count})" type="button" class="btn btn-primary">Excluir</button>
+    //            </td>
+    //        </tr>`;
+}
+
+function AdicionaLinhaBeneficiarioTabela(index, cpfBeneficiario, nomeBeneficiario, idBeneficiario) {
+    let count = index;           
+
+    return `<tr id="linha_${count}" onclick="PreencheSelecionado(${count})">
+                <td id="id_${count}" class="hidden">${idBeneficiario}</td>
+                <td id="cpf_${count}" >${cpfBeneficiario}</td>
+                <td id="nome_${count}" >${nomeBeneficiario}</td>
                 <td>
                     <button id="alterarBeneficiario_${count}" onclick="AlterarBeneficiario(${count})" type="button" class="btn btn-primary">Alterar</button>
                     <button id="excluirBeneficiario_${count}" onclick="RetirarBeneficiario(${count})" type="button" class="btn btn-primary">Excluir</button>

@@ -18,24 +18,59 @@ namespace FI.AtividadeEntrevista.BLL
         /// <param name="cliente">Objeto de cliente</param>
         public long Incluir(DML.Cliente cliente)
         {
-            DAL.DaoCliente cli = new DAL.DaoCliente();
-            return cli.Incluir(cliente);
+            long retornoId = 0L;
+            using (TransactionScope transacao = new TransactionScope())
+            {
+                try
+                {
+                    DAL.DaoCliente cli = new DAL.DaoCliente();
+                    retornoId = cli.Incluir(cliente);                    
+
+                    DaoBeneficiario benDAO = new DaoBeneficiario();
+                    cliente.Beneficiarios.ForEach(ben =>
+                    {
+                        ben.IdCliente = cliente.Id;
+                        benDAO.Incluir(ben);
+                    });
+
+                    // Se tudo correr bem, confirme a transação
+                    transacao.Complete();                    
+                }
+                catch (Exception ex)
+                {
+                    // O escopo será automaticamente descartado, e a transação será revertida
+                    Console.WriteLine("Erro na transação: " + ex.Message);                    
+                }
+
+            }
+
+            return retornoId;
         }
 
         /// <summary>
         /// Altera um cliente
         /// </summary>
         /// <param name="cliente">Objeto de cliente</param>
-        public void Alterar(DML.Cliente cliente)
+        public bool Alterar(DML.Cliente cliente)
         {
+            bool deuCerto;
             using (TransactionScope transacao = new TransactionScope())
             {
                 try
                 {
                     DAL.DaoCliente cli = new DAL.DaoCliente();
+                    DaoBeneficiario benDAO = new DaoBeneficiario();
+
+                    var listaIds = cliente.Beneficiarios.Where(x=>x.Id > 0).Select(x => x.Id).ToList();
+
+                    var listaBeneficiarioAntigoParaExcluir = benDAO.Listar(cliente.Id).FindAll(x => !listaIds.Contains(x.Id));
+                    listaBeneficiarioAntigoParaExcluir.ForEach(b =>
+                    {                        
+                        benDAO.Excluir(b.Id);
+                    });
+
                     cli.Alterar(cliente);
 
-                    DaoBeneficiario benDAO = new DaoBeneficiario();
                     cliente.Beneficiarios.ForEach(ben =>
                     {
                         benDAO.Incluir(ben);
@@ -43,13 +78,17 @@ namespace FI.AtividadeEntrevista.BLL
 
                     // Se tudo correr bem, confirme a transação
                     transacao.Complete();
+                    deuCerto = true;
                 }
                 catch (Exception ex)
                 {
                     // O escopo será automaticamente descartado, e a transação será revertida
                     Console.WriteLine("Erro na transação: " + ex.Message);
+                    deuCerto = false;
                 }
             }
+
+            return deuCerto;
         }
 
 

@@ -13,6 +13,7 @@ $(document).ready(function () {
         $('#formCadastro #Logradouro').val(obj.Logradouro);
         $('#formCadastro #Telefone').val(obj.Telefone);
         $('#formCadastro #Cpf').val(obj.Cpf);
+        PreencheModalBeneficiarios(obj.Beneficiarios);
     }
 
     $('#formCadastro').submit(function (e) {

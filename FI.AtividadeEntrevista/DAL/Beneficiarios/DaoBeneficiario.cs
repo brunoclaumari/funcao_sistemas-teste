@@ -33,21 +33,10 @@ namespace FI.AtividadeEntrevista.DAL
 
             DataSet ds = base.Consultar("FI_SP_InsereOuAlteraBeneficiario", parametros);
             long ret = 0;
-            if (ds.Tables[0].Rows.Count > 0)
+            if (ds.Tables.Count > 0 && ds.Tables[0].Rows.Count > 0)
                 long.TryParse(ds.Tables[0].Rows[0][0].ToString(), out ret);
             return ret;
         }
-
-        ///// <summary>
-        ///// Inclui um novo cliente
-        ///// </summary>
-        ///// <param name="cliente">Objeto de cliente</param>
-        //internal void Alterar(DML.Beneficiario beneficiario)
-        //{
-        //    List<System.Data.SqlClient.SqlParameter> parametros = RetornaParametros(beneficiario);
-
-        //    base.Executar("FI_SP_InsereOuAlteraBeneficiario", parametros);
-        //}
 
         internal List<System.Data.SqlClient.SqlParameter> RetornaParametros(Beneficiario beneficiario)
         {
@@ -61,22 +50,6 @@ namespace FI.AtividadeEntrevista.DAL
 
             return parametros;
         }
-
-        ///// <summary>
-        ///// Inclui um novo cliente
-        ///// </summary>
-        ///// <param name="cliente">Objeto de cliente</param>
-        //internal DML.Cliente Consultar(long Id)
-        //{
-        //    List<System.Data.SqlClient.SqlParameter> parametros = new List<System.Data.SqlClient.SqlParameter>();
-
-        //    parametros.Add(new System.Data.SqlClient.SqlParameter("Id", Id));
-
-        //    DataSet ds = base.Consultar("FI_SP_ConsCliente", parametros);
-        //    List<DML.Cliente> cli = Converter(ds);
-
-        //    return cli.FirstOrDefault();
-        //}
 
         internal bool VerificarExistenciaCpfBeneficiario(string CPF, long id)
         {
@@ -100,19 +73,16 @@ namespace FI.AtividadeEntrevista.DAL
             }
             return retornoCpfExiste;
         }
-
-
-
         
 
         /// <summary>
-        /// Lista todos os clientes
+        /// Lista todos os beneficiários pelo id do cliente
         /// </summary>
-        internal List<Beneficiario> Listar()
+        internal List<Beneficiario> Listar(long? idCliente = null)
         {
             List<System.Data.SqlClient.SqlParameter> parametros = new List<System.Data.SqlClient.SqlParameter>();
 
-            parametros.Add(new System.Data.SqlClient.SqlParameter("Id", 0));
+            parametros.Add(new System.Data.SqlClient.SqlParameter("IDCLIENTE", idCliente));
 
             DataSet ds = base.Consultar("FI_SP_ConsBeneficiario", parametros);
             List<Beneficiario> beneficiarios = Converter(ds);
@@ -151,7 +121,7 @@ namespace FI.AtividadeEntrevista.DAL
                     beneficiario.Cpf = row.Field<string>("CPF");
                     beneficiario.Nome = row.Field<string>("NOME");
                     
-                    beneficiario.IdCliente = Convert.ToInt64(row.Field<string>("IDCLIENTE"));
+                    beneficiario.IdCliente = row.Field<long>("IDCLIENTE");
                     lista.Add(beneficiario);
                 }
             }
