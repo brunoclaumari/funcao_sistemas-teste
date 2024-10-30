@@ -27,6 +27,7 @@ namespace FI.AtividadeEntrevista.DAL
             parametros.Add(new System.Data.SqlClient.SqlParameter("Logradouro", cliente.Logradouro));
             parametros.Add(new System.Data.SqlClient.SqlParameter("Email", cliente.Email));
             parametros.Add(new System.Data.SqlClient.SqlParameter("Telefone", cliente.Telefone));
+            parametros.Add(new System.Data.SqlClient.SqlParameter("Cpf", cliente.Cpf));
 
             DataSet ds = base.Consultar("FI_SP_IncClienteV2", parametros);
             long ret = 0;
@@ -51,16 +52,39 @@ namespace FI.AtividadeEntrevista.DAL
             return cli.FirstOrDefault();
         }
 
-        internal bool VerificarExistencia(string CPF)
+        internal bool VerificarExistencia(string CPF, long id)
         {
+            bool retornoCpfExiste = false;
             List<System.Data.SqlClient.SqlParameter> parametros = new List<System.Data.SqlClient.SqlParameter>();
 
             parametros.Add(new System.Data.SqlClient.SqlParameter("CPF", CPF));
 
             DataSet ds = base.Consultar("FI_SP_VerificaCliente", parametros);
 
-            return ds.Tables[0].Rows.Count > 0;
+            if (id <= 0)//id <= 0 é registro novo
+                return ds.Tables[0].Rows.Count > 0;
+            else if (ds.Tables[0].Rows.Count > 0)
+            {
+                long idConsultado;
+                var resultado = ds.Tables[0].Rows[0]["ID"];
+                if (resultado != null && long.TryParse(resultado.ToString(), out idConsultado))
+                {
+                    retornoCpfExiste = id != idConsultado;
+                }
+            }
+            return retornoCpfExiste;
         }
+
+        //internal bool VerificarExistencia(string CPF)
+        //{
+        //    List<System.Data.SqlClient.SqlParameter> parametros = new List<System.Data.SqlClient.SqlParameter>();
+
+        //    parametros.Add(new System.Data.SqlClient.SqlParameter("CPF", CPF));
+
+        //    DataSet ds = base.Consultar("FI_SP_VerificaCliente", parametros);
+
+        //    return ds.Tables[0].Rows.Count > 0;
+        //}
 
         internal List<Cliente> Pesquisa(int iniciarEm, int quantidade, string campoOrdenacao, bool crescente, out int qtd)
         {
@@ -117,6 +141,7 @@ namespace FI.AtividadeEntrevista.DAL
             parametros.Add(new System.Data.SqlClient.SqlParameter("Email", cliente.Email));
             parametros.Add(new System.Data.SqlClient.SqlParameter("Telefone", cliente.Telefone));
             parametros.Add(new System.Data.SqlClient.SqlParameter("ID", cliente.Id));
+            parametros.Add(new System.Data.SqlClient.SqlParameter("Cpf", cliente.Cpf));
 
             base.Executar("FI_SP_AltCliente", parametros);
         }
@@ -153,6 +178,7 @@ namespace FI.AtividadeEntrevista.DAL
                     cli.Nome = row.Field<string>("Nome");
                     cli.Sobrenome = row.Field<string>("Sobrenome");
                     cli.Telefone = row.Field<string>("Telefone");
+                    cli.Cpf = row.Field<string>("Cpf");
                     lista.Add(cli);
                 }
             }

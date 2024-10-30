@@ -3,7 +3,6 @@ using WebAtividadeEntrevista.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Web;
 using System.Web.Mvc;
 using FI.AtividadeEntrevista.DML;
 
@@ -25,22 +24,24 @@ namespace WebAtividadeEntrevista.Controllers
         [HttpPost]
         public JsonResult Incluir(ClienteModel model)
         {
+            List<string> erros = new List<string>();
             BoCliente bo = new BoCliente();
-            
-            if (!this.ModelState.IsValid)
+            bool cpfComPendencias = bo.CpfComProblemas(model.Cpf, model.Id, ref erros);
+
+            if (!this.ModelState.IsValid || cpfComPendencias)
             {
-                List<string> erros = (from item in ModelState.Values
-                                      from error in item.Errors
-                                      select error.ErrorMessage).ToList();
+                erros.AddRange((from item in ModelState.Values
+                                from error in item.Errors
+                                select error.ErrorMessage).ToList());
 
                 Response.StatusCode = 400;
                 return Json(string.Join(Environment.NewLine, erros));
             }
             else
             {
-                
+
                 model.Id = bo.Incluir(new Cliente()
-                {                    
+                {
                     CEP = model.CEP,
                     Cidade = model.Cidade,
                     Email = model.Email,
@@ -49,10 +50,11 @@ namespace WebAtividadeEntrevista.Controllers
                     Nacionalidade = model.Nacionalidade,
                     Nome = model.Nome,
                     Sobrenome = model.Sobrenome,
-                    Telefone = model.Telefone
+                    Telefone = model.Telefone,
+                    Cpf = model.Cpf,
                 });
 
-           
+
                 return Json("Cadastro efetuado com sucesso");
             }
         }
@@ -60,19 +62,39 @@ namespace WebAtividadeEntrevista.Controllers
         [HttpPost]
         public JsonResult Alterar(ClienteModel model)
         {
+            List<string> erros = new List<string>();
             BoCliente bo = new BoCliente();
-       
-            if (!this.ModelState.IsValid)
+            //bool cpfBeneficiarioComPendencias = false;
+            bool cpfComPendencias = bo.CpfComProblemas(model.Cpf, model.Id, ref erros);
+
+            foreach (var beneficiarioModel in model.Beneficiarios)
             {
-                List<string> erros = (from item in ModelState.Values
-                                      from error in item.Errors
-                                      select error.ErrorMessage).ToList();
+                bo.CpfComProblemas(beneficiarioModel.Cpf, beneficiarioModel.Id, ref erros, false);
+            }
+
+            if (!this.ModelState.IsValid || cpfComPendencias || erros.Count > 0)
+            {
+                erros.AddRange((from item in ModelState.Values
+                                from error in item.Errors
+                                select error.ErrorMessage).ToList());
 
                 Response.StatusCode = 400;
                 return Json(string.Join(Environment.NewLine, erros));
             }
             else
             {
+                List<Beneficiario> bene = new List<Beneficiario>();
+                model.Beneficiarios.ForEach(b =>
+                {
+                    bene.Add(new Beneficiario
+                    {
+                        Id = b.Id,
+                        Cpf = b.Cpf,
+                        Nome = b.Nome,
+                        IdCliente = model.Id,
+                    });
+                });
+
                 bo.Alterar(new Cliente()
                 {
                     Id = model.Id,
@@ -84,9 +106,11 @@ namespace WebAtividadeEntrevista.Controllers
                     Nacionalidade = model.Nacionalidade,
                     Nome = model.Nome,
                     Sobrenome = model.Sobrenome,
-                    Telefone = model.Telefone
+                    Telefone = model.Telefone,
+                    Cpf = model.Cpf,
+                    Beneficiarios = bene
                 });
-                               
+
                 return Json("Cadastro alterado com sucesso");
             }
         }
@@ -111,10 +135,11 @@ namespace WebAtividadeEntrevista.Controllers
                     Nacionalidade = cliente.Nacionalidade,
                     Nome = cliente.Nome,
                     Sobrenome = cliente.Sobrenome,
-                    Telefone = cliente.Telefone
+                    Telefone = cliente.Telefone,
+                    Cpf = cliente.Cpf
                 };
 
-            
+
             }
 
             return View(model);

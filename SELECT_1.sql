@@ -1,0 +1,11 @@
+﻿
+/*
+select * from CLIENTES
+
+select * from BENEFICIARIOS
+*/
+
+ALTER TABLE dbo.CLIENTES ADD CPF VARCHAR(14) NOT NULL
+
+
+
