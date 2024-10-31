@@ -80,18 +80,7 @@ namespace FI.AtividadeEntrevista.DAL
                 }
             }
             return retornoCpfExiste;
-        }
-
-        //internal bool VerificarExistencia(string CPF)
-        //{
-        //    List<System.Data.SqlClient.SqlParameter> parametros = new List<System.Data.SqlClient.SqlParameter>();
-
-        //    parametros.Add(new System.Data.SqlClient.SqlParameter("CPF", CPF));
-
-        //    DataSet ds = base.Consultar("FI_SP_VerificaCliente", parametros);
-
-        //    return ds.Tables[0].Rows.Count > 0;
-        //}
+        }        
 
         internal List<Cliente> Pesquisa(int iniciarEm, int quantidade, string campoOrdenacao, bool crescente, out int qtd)
         {

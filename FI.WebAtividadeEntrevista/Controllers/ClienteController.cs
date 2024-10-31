@@ -30,6 +30,11 @@ namespace WebAtividadeEntrevista.Controllers
             BoCliente bo = new BoCliente();
             bool cpfComPendencias = bo.CpfComProblemas(model.Cpf, model.Id, ref erros);
 
+            foreach (var beneficiarioModel in model.Beneficiarios)
+            {
+                bo.CpfComProblemas(beneficiarioModel.Cpf, beneficiarioModel.Id, ref erros, false);
+            }
+
             if (!this.ModelState.IsValid || cpfComPendencias)
             {
                 erros.AddRange((from item in ModelState.Values
@@ -74,7 +79,7 @@ namespace WebAtividadeEntrevista.Controllers
             UtilHelper helper = new UtilHelper();
             List<string> erros = new List<string>();
             BoCliente bo = new BoCliente();
-            //bool cpfBeneficiarioComPendencias = false;
+            
             bool cpfComPendencias = bo.CpfComProblemas(model.Cpf, model.Id, ref erros);
 
             foreach (var beneficiarioModel in model.Beneficiarios)

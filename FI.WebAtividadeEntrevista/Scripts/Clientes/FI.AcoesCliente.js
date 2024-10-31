@@ -2,22 +2,20 @@
 let idCliente;
 // “ID”, “CPF”, “NOME”, “IDCLIENTE
 let listaBeneficiarios = [];
+let listaCpfsBeneficiario = [];
 
 $(document).ready(function () {
     $('#Cpf').mask('000.000.000-00');
     $('#CpfBeneficiario').mask('000.000.000-00');
 
     $('#CEP').mask('00000-000');
+    $('#Telefone').mask('(00) 90000-0000');
 
 });
 
-//$('#Cpf').on('keyup', function () {
-//    console.log($('#Cpf').val());
-//});
 
-//.on('show.bs.modal'
 $('#btn_beneficiarios').on('click', function () {
-
+    
     $('#modal_beneficiarios').modal('show');
 });
 
@@ -43,10 +41,20 @@ $('#IncluirBeneficiario').on('click', function () {
 
     var linhas = tabelaBody.getElementsByTagName('tr');
 
-    tabelaBody.innerHTML += AdicionaBeneficiarioTabela(linhas.length + 1);
+    //listaBeneficiarios = [];
+    let cpfinput = $('#CpfBeneficiario').val();
+    const listaCpfJaExiste = listaCpfsBeneficiario.filter(c => c == cpfinput);
 
-    document.getElementById('CpfBeneficiario').value = '';
-    document.getElementById('NomeBeneficiario').value = '';
+    if (listaCpfJaExiste !== null && listaCpfJaExiste.length > 0) {
+        ModalDialog("Ocorreu um erro", `${cpfinput}: CPF de beneficiário já existe`);
+
+    } else {
+        tabelaBody.innerHTML += AdicionaBeneficiarioTabela(linhas.length + 1);
+        listaCpfsBeneficiario.push(cpfinput);
+
+        document.getElementById('CpfBeneficiario').value = '';
+        document.getElementById('NomeBeneficiario').value = '';
+    }   
 
 });
 
@@ -59,13 +67,12 @@ function PreencheModalBeneficiarios(listaObjBeneficiarios) {
         let id = benef.Id;
         let cpf = benef.Cpf;
         let nome = benef.Nome;
-        tabelaBody.innerHTML += AdicionaLinhaBeneficiarioTabela(index+1, cpf, nome, id);
-        //let idCliente = benef.IdCliente;
+        tabelaBody.innerHTML += AdicionaLinhaBeneficiarioTabela(index + 1, cpf, nome, id);    
+        listaCpfsBeneficiario.push(cpf);        
     });
 }
 
-//contentBeneficiarios
-//Beneficiarios
+
 function ObtemListaBeneficiariosDadosTela() {
     listaBeneficiarios = [];
     let beneficiarios = document.getElementById('contentBeneficiarios');
@@ -102,8 +109,12 @@ function RetirarBeneficiario(count_position) {
     var id = `linha_${count_position}`;
 
     // Removendo um nó a partir do pai
-    var node = document.getElementById(id);
+    var node = document.getElementById(id);      
+
     if (node.parentNode) {
+        let nodeCpf = document.getElementById(`cpf_${count_position}`);
+        var novoArray = listaCpfsBeneficiario.filter(item => item !== nodeCpf.textContent);
+        listaCpfsBeneficiario = novoArray;  
         node.parentNode.removeChild(node);
     }
 }
@@ -112,31 +123,19 @@ function PreencheSelecionado(count_position) {
 
     $('#CpfBeneficiario').val(document.getElementById(`cpf_${count_position}`).textContent);
     $('#NomeBeneficiario').val(document.getElementById(`nome_${count_position}`).textContent); 
-
 }
 
 
-function AdicionaBeneficiarioTabela(count) {
-    //let count = $("#contentBeneficiarios tbody tr").length;
+function AdicionaBeneficiarioTabela(count) {    
 
     let CpfBeneficiario = $('#CpfBeneficiario').val();
-    let NomeBeneficiario = $('#NomeBeneficiario').val();
+    let NomeBeneficiario = $('#NomeBeneficiario').val();     
 
-    return AdicionaLinhaBeneficiarioTabela(count, CpfBeneficiario, NomeBeneficiario, 0);
-
-    //return `<tr id="linha_${count}" >
-    //            <td id="id_${count}" class="hidden">0</td>
-    //            <td id="cpf_${count}" >${CpfBeneficiario}</td>
-    //            <td id="nome_${count}" >${NomeBeneficiario}</td>
-    //            <td>
-    //                <button id="alterarBeneficiario_${count}" onclick="AlterarBeneficiario(${count})" type="button" class="btn btn-primary">Alterar</button>
-    //                <button id="excluirBeneficiario_${count}" onclick="RetirarBeneficiario(${count})" type="button" class="btn btn-primary">Excluir</button>
-    //            </td>
-    //        </tr>`;
+    return AdicionaLinhaBeneficiarioTabela(count, CpfBeneficiario, NomeBeneficiario, 0);    
 }
 
 function AdicionaLinhaBeneficiarioTabela(index, cpfBeneficiario, nomeBeneficiario, idBeneficiario) {
-    let count = index;           
+    let count = index;    
 
     return `<tr id="linha_${count}" onclick="PreencheSelecionado(${count})">
                 <td id="id_${count}" class="hidden">${idBeneficiario}</td>
